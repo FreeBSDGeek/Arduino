@@ -104,7 +104,7 @@ bool gatewayTransportInit() {
 			// Turn off access point
 			WiFi.mode (WIFI_STA);
 			#if defined(MY_ESP8266_HOSTNAME)
-				WiFi.hostname(MY_EPS8266_HOSTNAME);
+				WiFi.hostname(MY_ESP8266_HOSTNAME);
 			#endif
 			(void)WiFi.begin(MY_ESP8266_SSID, MY_ESP8266_PASSWORD);
 			#ifdef MY_IP_ADDRESS
@@ -150,6 +150,8 @@ bool gatewayTransportSend(MyMessage &message)
 {
 	bool ret = true;
 	char *_ethernetMsg = protocolFormat(message);
+
+    setIndication(INDICATION_GW_TX);
 
 	_w5100_spi_en(true);
 	#if defined(MY_CONTROLLER_IP_ADDRESS)
@@ -267,6 +269,7 @@ bool gatewayTransportAvailable()
 
 		if (packet_size) {
 			//debug(PSTR("UDP packet available. Size:%d\n"), packet_size);
+            setIndication(INDICATION_GW_RX);
 			#if defined(MY_GATEWAY_ESP8266)
 				_ethernetServer.read(inputString[0].string, MY_GATEWAY_MAX_RECEIVE_LENGTH);
 				inputString[0].string[packet_size] = 0;
@@ -316,6 +319,7 @@ bool gatewayTransportAvailable()
 				// Loop over clients connect and read available data
 			for (uint8_t i = 0; i < ARRAY_SIZE(clients); i++) {
 				if (_readFromClient(i)) {
+                    setIndication(INDICATION_GW_RX);
 					_w5100_spi_en(false);
 					return true;
 				}
@@ -341,6 +345,7 @@ bool gatewayTransportAvailable()
 					client.stop();
 				} else {
 					if (_readFromClient()) {
+                        setIndication(INDICATION_GW_RX);
 						_w5100_spi_en(false);
 						return true;
 					}
